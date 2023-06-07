@@ -7,7 +7,10 @@ const {
   deleteContact,
   updateStatusContact,
 } = require("../controllers/contactsControllers");
+const auth = require("../middlewares/auth");
 const router = express.Router();
+
+router.use(auth);
 
 router.get("/", getContacts);
 

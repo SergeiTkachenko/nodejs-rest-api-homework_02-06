@@ -12,8 +12,9 @@ const {
 } = require("../middlewares/validation");
 
 const getContacts = async (req, res, next) => {
+  const { page = 1, limit = 5, favorite } = req.query;
   try {
-    const contacts = await getContactsService();
+    const contacts = await getContactsService(page, limit, favorite);
     res.status(200).json(contacts);
   } catch (err) {
     next(err);

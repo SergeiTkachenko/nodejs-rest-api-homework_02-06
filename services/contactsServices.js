@@ -1,7 +1,15 @@
 const Contact = require("../models/Contact");
 
-const getContactsService = async () => {
-  return await Contact.find();
+const getContactsService = async (page, limit, favorite) => {
+  const skip = (page - 1) * limit;
+  const filter = {};
+  if (favorite === "true") {
+    filter.favorite = true;
+  } else if (favorite === "false") {
+    filter.favorite = false;
+  }
+
+  return await Contact.find(filter).limit(limit).skip(skip);
 };
 
 const getContactService = async (id) => {
