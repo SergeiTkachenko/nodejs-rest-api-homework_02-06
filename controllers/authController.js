@@ -3,6 +3,7 @@ const {
   signupService,
   loginService,
   logoutService,
+  uploadAvatarService,
 } = require("../services/authServices");
 
 const signup = controllerWrapper(async (req, res) => {
@@ -36,4 +37,11 @@ const getCurrent = controllerWrapper(async (req, res) => {
   });
 });
 
-module.exports = { signup, login, logout, getCurrent };
+const uploadAvatar = controllerWrapper(async (req, res) => {
+  const result = await uploadAvatarService(req);
+  console.log(1111);
+
+  res.status(200).json({ avatarURL: result });
+});
+
+module.exports = { signup, login, logout, getCurrent, uploadAvatar };
