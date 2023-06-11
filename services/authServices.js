@@ -2,6 +2,12 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const assignTokens = require("../utils/assignTokens");
 const HttpError = require("../utils/Errors");
+const gravatar = require("gravatar");
+const path = require("path");
+const fs = require("fs/promises");
+const Jimp = require("jimp");
+
+const avatarDir = path.join(__dirname, "../", "public", "avatars");
 
 const signupService = async (body) => {
   const { email, userName, password } = body;
@@ -13,11 +19,14 @@ const signupService = async (body) => {
 
   //   const hashedPassword = await bcrypt.hash(password, 12);
 
+  const avatarURL = await gravatar.url(email);
+
   const newUser = await User.create({
     email,
     userName,
     // password: hashedPassword,
     password,
+    avatarURL,
   });
 
   return newUser;
@@ -57,4 +66,30 @@ const logoutService = async (user) => {
   return id;
 };
 
-module.exports = { signupService, loginService, logoutService };
+const uploadAvatarService = async (body) => {
+  const { _id: id } = body.user;
+  const { path: tempUpload, originalname } = body.file;
+  const filename = `${id}_${originalname}`;
+  const resultUpload = path.join(avatarDir, filename);
+
+  await fs.rename(tempUpload, resultUpload);
+
+  (async function resize() {
+    const image = await Jimp.read(resultUpload);
+    image.resize(250, 250);
+    await image.writeAsync(resultUpload);
+  })();
+
+  const avatarURL = path.join("avatars", filename);
+
+  await User.findByIdAndUpdate(id, { avatarURL });
+
+  return avatarURL;
+};
+
+module.exports = {
+  signupService,
+  loginService,
+  logoutService,
+  uploadAvatarService,
+};

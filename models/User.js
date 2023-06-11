@@ -24,6 +24,10 @@ const schema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  avatarURL: {
+    type: String,
+    required: [true, "Avatar is required"],
+  },
 });
 
 schema.pre("save", async function (next) {
