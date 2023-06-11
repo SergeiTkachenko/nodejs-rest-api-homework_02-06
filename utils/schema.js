@@ -28,4 +28,7 @@ const updateStatusValidation = Joi.object({
     .messages({ "any.required": "missing field favorite" }),
 });
 
-module.exports = { contactsValidation, updateStatusValidation };
+module.exports = {
+  contactsValidation,
+  updateStatusValidation,
+};

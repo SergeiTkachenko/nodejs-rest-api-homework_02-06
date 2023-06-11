@@ -2,12 +2,15 @@ const bcrypt = require("bcrypt");
 const User = require("../models/User");
 const assignTokens = require("../utils/assignTokens");
 const HttpError = require("../utils/Errors");
+const sendEmail = require("../utils/sendEmail");
 const gravatar = require("gravatar");
 const path = require("path");
 const fs = require("fs/promises");
 const Jimp = require("jimp");
+const { v4: uuidv4 } = require("uuid");
 
 const avatarDir = path.join(__dirname, "../", "public", "avatars");
+const { PROJECT_URL } = process.env;
 
 const signupService = async (body) => {
   const { email, userName, password } = body;
@@ -20,6 +23,7 @@ const signupService = async (body) => {
   //   const hashedPassword = await bcrypt.hash(password, 12);
 
   const avatarURL = await gravatar.url(email);
+  const verificationToken = uuidv4();
 
   const newUser = await User.create({
     email,
@@ -27,9 +31,56 @@ const signupService = async (body) => {
     // password: hashedPassword,
     password,
     avatarURL,
+    verificationToken,
   });
 
+  const verifyEmail = {
+    to: email,
+    subject: "Veryfy email",
+    html: `<a target="_blank" href="${PROJECT_URL}/auth/verify/${verificationToken}">Click here to veryfy your email</a>`,
+  };
+
+  await sendEmail(verifyEmail);
+
   return newUser;
+};
+
+const verifyService = async (body) => {
+  const { verificationToken } = body;
+  const user = await User.findOne({ verificationToken });
+  if (!user) {
+    throw new HttpError(404, "User not found");
+  }
+
+  await User.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: "",
+  });
+
+  return true;
+};
+
+const resendVerifyService = async (body) => {
+  const { email } = body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new HttpError(404, "Email not found");
+  }
+  if (user.verify) {
+    throw new HttpError(400, "Verification has already been passed");
+  }
+
+  const verifyEmail = {
+    to: email,
+    subject: "Veryfy email",
+    html: `<a target="_blank" href="${PROJECT_URL}/auth/verify/${user.verificationToken}">Click here to veryfy your email</a>`,
+  };
+
+  await sendEmail(verifyEmail);
+
+  return true;
 };
 
 const loginService = async (body) => {
@@ -46,6 +97,10 @@ const loginService = async (body) => {
   }
 
   const isPasswordCorrect = bcrypt.compare(password, fatchedUserEmail.password);
+
+  if (!fatchedUserEmail.verify) {
+    throw new HttpError(401, "User is not verified");
+  }
 
   if (!isPasswordCorrect) {
     throw new HttpError(401, "Password not correct");
@@ -92,4 +147,6 @@ module.exports = {
   loginService,
   logoutService,
   uploadAvatarService,
+  verifyService,
+  resendVerifyService,
 };

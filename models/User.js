@@ -28,6 +28,14 @@ const schema = new mongoose.Schema({
     type: String,
     required: [true, "Avatar is required"],
   },
+  verify: {
+    type: Boolean,
+    default: false,
+  },
+  verificationToken: {
+    type: String,
+    required: [true, "Verify token is required"],
+  },
 });
 
 schema.pre("save", async function (next) {

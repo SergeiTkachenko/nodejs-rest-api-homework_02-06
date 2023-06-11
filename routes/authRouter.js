@@ -6,14 +6,25 @@ const {
   logout,
   getCurrent,
   uploadAvatar,
+  verify,
+  resendVerify,
 } = require("../controllers/authController");
-const { createUserSchema, loginSchema } = require("../utils/authSchema");
+const {
+  createUserSchema,
+  loginSchema,
+  verifyEmailSchema,
+} = require("../utils/authSchema");
 const validateBody = require("../utils/validateBody");
 const auth = require("../middlewares/auth");
 const upload = require("../middlewares/upload");
 
 router.post("/signup", validateBody(createUserSchema), signup);
+
 router.post("/login", validateBody(loginSchema), login);
+
+router.post("/verify", validateBody(verifyEmailSchema), resendVerify);
+
+router.get("/verify/:verificationToken", verify);
 
 router.post("/logout", auth, logout);
 
