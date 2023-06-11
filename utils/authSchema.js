@@ -17,4 +17,8 @@ const loginSchema = createUserSchema.fork(["email", "password"], (schema) =>
   })
 );
 
-module.exports = { createUserSchema, loginSchema };
+const verifyEmailSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
+
+module.exports = { createUserSchema, loginSchema, verifyEmailSchema };
